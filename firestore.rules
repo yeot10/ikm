@@ -1,0 +1,97 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: messages
+// Fields:
+//   - text: string (required)
+//   - senderNickname: string (required)
+//   - senderIp: string (required)
+//   - timestamp: timestamp (required)
+//   - replyToId: string (optional)
+//   - reactions: map (optional)
+//
+// Collection: logs
+// Fields:
+//   - type: string (required)
+//   - content: string (required)
+//   - timestamp: timestamp (required)
+//   - ip: string (required)
+//   - nickname: string (optional)
+//
+// Collection: sessions
+// Fields:
+//   - nickname: string (required)
+//   - ip: string (required)
+//   - lastActive: timestamp (required)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return true; // Anonymous access allowed for this specific app requirement
+    }
+
+    function isValidMessage(data) {
+      return (data.text is string || data.imageUrl is string) && 
+             data.senderNickname is string && data.senderNickname.size() > 0 && data.senderNickname.size() < 50 &&
+             data.senderIp is string &&
+             data.timestamp is timestamp;
+    }
+
+    function isValidLog(data) {
+      return data.type is string && data.content is string &&
+             data.timestamp is timestamp && data.ip is string;
+    }
+
+    function isValidSession(data) {
+      return data.nickname is string && data.ip is string &&
+             data.lastActive is timestamp;
+    }
+
+    function isValidUser(data) {
+      return data.nickname is string && data.nickname.size() > 0 && data.nickname.size() < 50 &&
+             data.ip is string && data.createdAt is timestamp;
+    }
+
+    function isValidNotice(data) {
+      return data.text is string && data.text.size() > 0 && data.updatedAt is timestamp;
+    }
+
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow write: if isValidNotice(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isValidUser(request.resource.data);
+      allow update: if isValidUser(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /messages/{messageId} {
+      allow read: if true;
+      allow create: if isValidMessage(request.resource.data);
+      allow update: if true; // Allow reactions and replies
+      allow delete: if true; // In anonymous chat without Auth, we allow deletion from client. Frontend handles ownership check by IP.
+    }
+
+    match /logs/{logId} {
+      allow read: if true; // User wants logs to be visible or at least logged
+      allow create: if isValidLog(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow create: if isValidSession(request.resource.data);
+      allow update: if isValidSession(request.resource.data);
+      allow delete: if true;
+    }
+  }
+}

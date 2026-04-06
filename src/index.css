@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .mesh-gradient {
+    background-color: #0a0a0c;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+      radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+  }
+
+  .light .mesh-gradient {
+    background-color: #f8f9fc;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(210,40%,95%,1) 0, transparent 50%), 
+      radial-gradient(at 50% 0%, hsla(225,39%,90%,0.5) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, hsla(339,49%,90%,0.5) 0, transparent 50%);
+  }
+
+  .rainbow-border {
+    position: relative;
+    z-index: 0;
+  }
+
+  .rainbow-border::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -2px;
+    padding: 2px;
+    border-radius: inherit;
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    background-size: 200% 100%;
+    -webkit-mask: 
+       linear-gradient(#fff 0 0) content-box, 
+       linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: rainbow-animation 3s linear infinite;
+    pointer-events: none;
+  }
+
+  /* Remove the old background-image based rainbow-border */
+  .dark .rainbow-border {
+    background-image: none;
+  }
+
+  @keyframes rainbow-animation {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+}
